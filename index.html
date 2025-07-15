@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volvo Cars Scheduler</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Modern Volvo-inspired Color Palette */
+    :root {
+      --volvo-blue: #003057;
+      --volvo-blue-light: #0057a3;
+      --volvo-blue-lightest: #e6f0f7;
+      --volvo-red: #e63946;
+      --volvo-gray: #f5f7fa;
+      --volvo-dark: #222;
+      --volvo-light: #fff;
+      --volvo-accent: #4a90e2;
+      --success: #4CAF50;
+      --warning: #FFC107;
+    }
+
+    /* Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--volvo-blue-lightest) 0%, #e0eafc 100%);
+      color: var(--volvo-dark);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 40px;
+      overflow-x: hidden;
+    }
+
+    /* Logo spinning animation */
+    @keyframes spin {
+      0% { transform: rotate(0deg) scale(0.5); opacity: 0; }
+      50% { transform: rotate(360deg) scale(1.2); opacity: 1; }
+      100% { transform: rotate(720deg) scale(1); opacity: 1; }
+    }
+
+    .logo-spinner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      animation: spin 2.5s ease-out forwards;
+    }
+
+    .logo-spinner img {
+      width: 150px;
+      height: 150px;
+      filter: drop-shadow(0 0 20px rgba(0, 48, 87, 0.5));
+      object-fit: contain;
+    }
+
+    .content {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 1s ease;
+    }
+
+    .content.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .header {
+      background: linear-gradient(90deg, var(--volvo-blue) 0%, #00203f 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 100;
+    }
+
+    .logo {
+      width: 80px;
+      height: auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+      transition: all 0.5s ease;
+      object-fit: contain;
+    }
+
+    .logo:hover {
+      transform: scale(1.1);
+    }
+
+    .header h1 {
+      font-weight: 600;
+      font-size: 1.8rem;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: var(--volvo-light);
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: var(--volvo-blue);
+    }
+
+    .card h2 {
+      color: var(--volvo-blue);
+      margin-bottom: 25px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--volvo-blue-lightest);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card h2 i {
+      color: var(--volvo-blue-light);
+    }
+
+    .card h3 {
+      color: var(--volvo-blue);
+      margin: 25px 0 15px;
+      font-size: 1.3rem;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--volvo-blue);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="date"],
+    input[type="time"] {
+      display: block;
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 2px solid #d1e0ee;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: var(--volvo-light);
+    }
+
+    input:focus {
+      border-color: var(--volvo-blue-light);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 88, 163, 0.2);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--volvo-blue) 0%, var(--volvo-blue-light) 100%);
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(0, 88, 163, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 88, 163, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.delete {
+      background: linear-gradient(135deg, #d9534f 0%, var(--volvo-red) 100%);
+      box-shadow: 0 4px 10px rgba(217, 83, 79, 0.3);
+    }
+
+    button.delete:hover {
+      box-shadow: 0 6px 15px rgba(217, 83, 79, 0.4);
+    }
+
+    button.logout {
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+      margin-left: auto;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    ul li {
+      background: var(--volvo-blue-lightest);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 4px solid var(--volvo-blue);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+    }
+
+    ul li:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .schedule-icon {
+      background: var(--volvo-blue);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+
+    .user-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--volvo-blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .admin-card {
+      border: 2px dashed var(--volvo-blue);
+    }
+
+    .admin-card h2 {
+      color: var(--volvo-red);
+    }
+
+    .admin-card::before {
+      background: var(--volvo-red);
+    }
+
+    .welcome-message {
+      background: linear-gradient(135deg, var(--volvo-blue) 0%, var(--volvo-blue-light) 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin: -10px -20px 25px -20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      transform: translateX(200%);
+      transition: transform 0.4s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      background: var(--success);
+    }
+
+    .notification.error {
+      background: var(--volvo-red);
+    }
+
+    .header-controls {
+      margin-left: auto;
+      display: flex;
+      gap: 15px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #6c757d;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: #ced4da;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+
+    /* Background elements */
+    .background-element {
+      position: fixed;
+      z-index: -1;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+
+    .volvo-car {
+      font-size: 10rem;
+      color: var(--volvo-blue);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      
+      .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+      
+      .header-controls {
+        margin-left: 0;
+        margin-top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Logo spinner -->
+  <div class="logo-spinner">
+    <img src="volvo-logo.png" alt="Volvo Logo">
+  </div>
+
+  <div class="content">
+    <header class="header">
+      <img src="volvo-logo.png" alt="Volvo Logo" class="logo">
+      <h1>Volvo Cars Work Scheduler</h1>
+      <div class="header-controls">
+        <button id="logoutBtn" class="logout" style="display: none;">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="register" class="card">
+        <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+        <form id="registerForm">
+          <div class="form-group">
+            <label for="username"><i class="fas fa-user"></i> Username</label>
+            <input type="text" id="username" placeholder="Enter your username" required>
+          </div>
+          <div class="form-group">
+            <label for="password"><i class="fas fa-lock"></i> Password</label>
+            <input type="password" id="password" placeholder="Create a password" required>
+          </div>
+          <button type="submit">
+            <i class="fas fa-user-check"></i> Register
+          </button>
+        </form>
+      </section>
+
+      <section id="login" class="card">
+        <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="loginUsername"><i class="fas fa-user"></i> Username</label>
+            <input type="text" id="loginUsername" placeholder="Enter your username" required>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+          </div>
+          <button type="submit">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+        </form>
+      </section>
+
+      <section id="dashboard" class="card" style="display:none;">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div>
+            <h2>Welcome, <span id="userNameDisplay"></span></h2>
+            <p>Manage your work schedule below</p>
+          </div>
+        </div>
+
+        <h3><i class="fas fa-calendar-alt"></i> Select Work Day & Time</h3>
+        <form id="scheduleForm">
+          <div class="form-group">
+            <label for="workDate"><i class="fas fa-calendar-day"></i> Date</label>
+            <input type="date" id="workDate" required>
+          </div>
+          <div class="form-group">
+            <label for="workTime"><i class="fas fa-clock"></i> Time</label>
+            <input type="time" id="workTime" required>
+          </div>
+          <button type="submit">
+            <i class="fas fa-save"></i> Save Schedule
+          </button>
+        </form>
+
+        <h3><i class="fas fa-list"></i> Your Schedule</h3>
+        <ul id="userSchedule">
+          <li class="empty-state">
+            <i class="fas fa-calendar-plus"></i>
+            <p>No scheduled shifts yet</p>
+          </li>
+        </ul>
+      </section>
+
+      <section id="adminPanel" class="card admin-card" style="display:none;">
+        <div class="welcome-message">
+          <h2><i class="fas fa-crown"></i> Administrator Panel</h2>
+          <p>Manage all employee schedules</p>
+        </div>
+        <div id="allSchedules">
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No employee schedules to display</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="footer">
+      <p>Volvo Cars Work Scheduler &copy; 2023 | Designed for Productivity</p>
+    </div>
+  </div>
+
+  <!-- Background decorative elements -->
+  <div class="background-element" style="top: 10%; left: 5%; transform: rotate(15deg);">
+    <i class="fas fa-car volvo-car"></i>
+  </div>
+  <div class="background-element" style="top: 30%; right: 5%; transform: rotate(-10deg);">
+    <i class="fas fa-car-side volvo-car"></i>
+  </div>
+  <div class="background-element" style="bottom: 20%; left: 15%; transform: rotate(5deg);">
+    <i class="fas fa-truck-pickup volvo-car"></i>
+  </div>
+
+  <script>
+    // Simulated in-memory database
+    const users = [];
+    let currentUser = null;
+
+    // DOM Elements
+    const registerForm = document.getElementById('registerForm');
+    const loginForm = document.getElementById('loginForm');
+    const scheduleForm = document.getElementById('scheduleForm');
+    const userSchedule = document.getElementById('userSchedule');
+    const allSchedulesDiv = document.getElementById('allSchedules');
+    const dashboard = document.getElementById('dashboard');
+    const adminPanel = document.getElementById('adminPanel');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const notification = document.getElementById('notification');
+    const userAvatar = document.getElementById('userAvatar');
+    const content = document.querySelector('.content');
+    const logoSpinner = document.querySelector('.logo-spinner');
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', () => {
+      // After 2.5 seconds (when animation completes), show the content
+      setTimeout(() => {
+        logoSpinner.style.display = 'none';
+        content.classList.add('show');
+      }, 2500);
+    });
+
+    // Handle registration
+    registerForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (users.find(u => u.username === username)) {
+        showNotification('Username already exists', 'error');
+        return;
+      }
+
+      users.push({
+        username,
+        password,
+        role: 'user',
+        schedules: []
+      });
+
+      showNotification('Registration successful. You can now log in.', 'success');
+      registerForm.reset();
+    });
+
+    // Handle login
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (!user) {
+        showNotification('Invalid credentials', 'error');
+        return;
+      }
+
+      currentUser = user;
+      userNameDisplay.textContent = user.username;
+      userAvatar.textContent = user.username.charAt(0).toUpperCase();
+      
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('register').style.display = 'none';
+      dashboard.style.display = 'block';
+      logoutBtn.style.display = 'block';
+
+      if (user.role === 'admin') {
+        adminPanel.style.display = 'block';
+        renderAdminSchedules();
+      } else {
+        adminPanel.style.display = 'none';
+        renderUserSchedule();
+      }
+    });
+
+    // Handle schedule submission
+    scheduleForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const date = document.getElementById('workDate').value;
+      const time = document.getElementById('workTime').value;
+
+      if (!date || !time) return;
+
+      currentUser.schedules.push({ date, time });
+      renderUserSchedule();
+      if (currentUser.role === 'admin') renderAdminSchedules();
+      showNotification('Schedule added successfully!', 'success');
+
+      scheduleForm.reset();
+    });
+
+    // Handle logout
+    logoutBtn.addEventListener('click', () => {
+      currentUser = null;
+      dashboard.style.display = 'none';
+      adminPanel.style.display = 'none';
+      document.getElementById('login').style.display = 'block';
+      document.getElementById('register').style.display = 'block';
+      logoutBtn.style.display = 'none';
+      showNotification('You have been logged out', 'success');
+    });
+
+    // Render user schedule
+    function renderUserSchedule() {
+      if (currentUser.schedules.length === 0) {
+        userSchedule.innerHTML = `
+          <li class="empty-state">
+            <i class="fas fa-calendar-plus"></i>
+            <p>No scheduled shifts yet</p>
+          </li>
+        `;
+        return;
+      }
+      
+      userSchedule.innerHTML = '';
+      currentUser.schedules.forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div class="schedule-item">
+            <div class="schedule-icon">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+            <div>
+              <strong>${formatDate(entry.date)}</strong><br>
+              <span>${formatTime(entry.time)}</span>
+            </div>
+          </div>
+        `;
+
+        const btn = document.createElement('button');
+        btn.className = 'delete';
+        btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        btn.addEventListener('click', () => {
+          currentUser.schedules.splice(index, 1);
+          renderUserSchedule();
+          if (currentUser.role === 'admin') renderAdminSchedules();
+          showNotification('Schedule deleted', 'success');
+        });
+
+        li.appendChild(btn);
+        userSchedule.appendChild(li);
+      });
+    }
+
+    // Admin: View all schedules
+    function renderAdminSchedules() {
+      const hasSchedules = users.some(user => user.schedules.length > 0);
+      
+      if (!hasSchedules) {
+        allSchedulesDiv.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No employee schedules to display</p>
+          </div>
+        `;
+        return;
+      }
+      
+      allSchedulesDiv.innerHTML = '';
+      users.forEach(user => {
+        if (user.schedules.length === 0) return;
+        
+        const userDiv = document.createElement('div');
+        userDiv.classList.add('card');
+        userDiv.style.marginBottom = '20px';
+
+        const title = document.createElement('h4');
+        title.innerHTML = `
+          <i class="fas fa-user${user.role === 'admin' ? '-tie' : ''}"></i>
+          ${user.username} (${user.role})
+        `;
+        title.style.color = user.role === 'admin' ? 'var(--volvo-red)' : 'var(--volvo-blue)';
+        title.style.marginBottom = '15px';
+        userDiv.appendChild(title);
+
+        user.schedules.forEach((entry, idx) => {
+          const p = document.createElement('div');
+          p.classList.add('schedule-item');
+          p.style.marginBottom = '10px';
+          p.style.padding = '10px';
+          p.style.borderRadius = '8px';
+          p.style.backgroundColor = 'var(--volvo-blue-lightest)';
+          p.innerHTML = `
+            <div>
+              <strong>${formatDate(entry.date)}</strong><br>
+              <span>${formatTime(entry.time)}</span>
+            </div>
+          `;
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'delete';
+          delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+          delBtn.style.marginLeft = '10px';
+          delBtn.addEventListener('click', () => {
+            user.schedules.splice(idx, 1);
+            renderAdminSchedules();
+            if (user === currentUser) renderUserSchedule();
+            showNotification('Schedule deleted', 'success');
+          });
+
+          p.appendChild(delBtn);
+          userDiv.appendChild(p);
+        });
+
+        if (user.username !== 'admin') {
+          const delAccountBtn = document.createElement('button');
+          delAccountBtn.className = 'delete';
+          delAccountBtn.innerHTML = '<i class="fas fa-user-slash"></i> Delete Account';
+          delAccountBtn.style.marginTop = '15px';
+          delAccountBtn.addEventListener('click', () => {
+            const index = users.indexOf(user);
+            if (index !== -1) users.splice(index, 1);
+            renderAdminSchedules();
+            showNotification('Account deleted', 'success');
+          });
+          userDiv.appendChild(delAccountBtn);
+        }
+
+        allSchedulesDiv.appendChild(userDiv);
+      });
+    }
+
+    // Format date for display
+    function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+
+    // Format time for display
+    function formatTime(timeString) {
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours);
+      return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? 'PM' : 'AM'}`;
+    }
+
+    // Show notification
+    function showNotification(message, type) {
+      notification.textContent = message;
+      notification.className = `notification ${type} show`;
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Optional: Create admin manually for test
+    users.push({
+      username: 'admin',
+      password: 'admin',
+      role: 'admin',
+      schedules: []
+    });
+
+    // Create test user
+    users.push({
+      username: 'employee1',
+      password: 'test123',
+      role: 'user',
+      schedules: [
+        { date: '2023-08-15', time: '09:00' },
+        { date: '2023-08-16', time: '13:00' }
+      ]
+    });
+  </script>
+</body>
+</html>
